@@ -1,0 +1,19 @@
+json
+{
+  "name": "Код ангела",
+  "short_name": "Код ангела",
+  "description": "Светлый чат-оракул парного времени и ангельских знаков на циферблате",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060a20",
+  "theme_color": "#060a20",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

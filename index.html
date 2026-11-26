@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#060a20" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Код ангела</title><link rel="manifest" href="manifest.json" /><link rel="icon" type="image/png" href="icon-512.png" /><link rel="apple-touch-icon" href="icon-512.png" /><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));}</script>
+<script src="https://cdn.tailwindcss.com" defer></script>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter",system-ui,sans-serif;
+    color:#f6f1e7;
+    background:#060a20;
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(900px 520px at 50% -12%, rgba(84,116,224,.42), transparent 62%),
+      radial-gradient(720px 420px at 108% 108%, rgba(232,200,119,.16), transparent 62%),
+      radial-gradient(620px 520px at -10% 104%, rgba(124,94,224,.20), transparent 62%),
+      linear-gradient(180deg,#0a1030 0%,#070c24 55%,#050817 100%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55;
+    background-image:
+      radial-gradient(1.4px 1.4px at 12% 18%, rgba(255,255,255,.85), transparent 60%),
+      radial-gradient(1.2px 1.2px at 78% 9%, rgba(255,240,200,.8), transparent 60%),
+      radial-gradient(1.6px 1.6px at 34% 42%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(1.1px 1.1px at 88% 34%, rgba(200,220,255,.8), transparent 60%),
+      radial-gradient(1.3px 1.3px at 6% 62%, rgba(255,255,255,.6), transparent 60%),
+      radial-gradient(1.2px 1.2px at 62% 74%, rgba(255,245,215,.7), transparent 60%),
+      radial-gradient(1.5px 1.5px at 22% 88%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.1px 1.1px at 92% 82%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1.2px 1.2px at 48% 6%, rgba(255,255,255,.5), transparent 60%);
+  }
+
+  .app{
+    position:relative;
+    display:flex;flex-direction:column;
+    height:100vh;height:100dvh;
+    max-width:640px;margin:0 auto;
+    overflow:hidden;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    flex:0 0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;
+    padding:14px 16px 10px;
+    padding-top:calc(14px + env(safe-area-inset-top));
+  }
+  .logo{display:flex;align-items:center;gap:11px;min-width:0;}
+  .logo-mark{
+    width:38px;height:38px;flex:0 0 auto;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;color:#2a1f06;font-weight:700;
+    background:linear-gradient(150deg,#fdf0c4,#e8c877 55%,#bd9a48);
+    box-shadow:0 6px 20px rgba(232,200,119,.32), inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  .logo h1{margin:0;font-size:16.5px;font-weight:700;letter-spacing:.02em;line-height:1.15;}
+  .logo p{margin:1px 0 0;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(232,200,119,.72);}
+  .ghost-btn{
+    flex:0 0 auto;
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.10);
+    color:rgba(246,241,231,.35);
+    font-size:15px;cursor:pointer;
+    transition:.2s;
+  }
+  .ghost-btn:active{background:rgba(232,200,119,.18);color:#e8c877;}
+
+  /* ---------- MAIN / VIEWS ---------- */
+  main{flex:1 1 auto;min-height:0;position:relative;}
+  .view{position:absolute;inset:0;display:none;flex-direction:column;min-height:0;}
+  .view.active{display:flex;}
+
+  /* ---------- CHAT ---------- */
+  .chat-scroll{
+    flex:1 1 auto;min-height:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:6px 14px 8px;
+    scrollbar-width:none;
+  }
+  .chat-scroll::-webkit-scrollbar{display:none;}
+
+  .msg{display:flex;margin-bottom:12px;animation:rise .38s cubic-bezier(.22,.9,.28,1) both;}
+  .msg.user{justify-content:flex-end;}
+  @keyframes rise{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+  .bubble{
+    max-width:90%;
+    padding:12px 15px;
+    border-radius:20px;
+    font-size:14.5px;line-height:1.5;
+    word-wrap:break-word;
+  }
+  .bubble.user{
+    background:linear-gradient(140deg,#f3dda1,#e2bf6f 70%,#c9a350);
+    color:#20180a;font-weight:500;
+    border-bottom-right-radius:7px;
+    box-shadow:0 8px 22px rgba(232,200,119,.22);
+  }
+  .bubble.bot{
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(232,200,119,.17);
+    -webkit-backdrop-filter:blur(16px);
+    backdrop-filter:blur(16px);
+    border-bottom-left-radius:7px;
+    box-shadow:0 10px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .bubble.bot.portal{
+    border:1px solid rgba(232,200,119,.75);
+    background:linear-gradient(160deg,rgba(232,200,119,.13),rgba(255,255,255,.05));
+    box-shadow:0 0 0 1px rgba(232,200,119,.22),0 0 34px rgba(232,200,119,.30),0 14px 42px rgba(0,0,0,.48);
+  }
+  .bubble.bot p.plain{margin:0;font-size:14.5px;line-height:1.55;color:rgba(246,241,231,.94);}
+
+  .card-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:6px;}
+  .time-pill{
+    font-size:23px;font-weight:800;letter-spacing:.06em;line-height:1;
+    background:linear-gradient(180deg,#fff6d6,#e8c877 58%,#c19d4b);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 10px rgba(232,200,119,.35));
+  }
+  .vibe-pill{
+    font-size:10.5px;padding:4px 9px;border-radius:999px;
+    background:rgba(232,200,119,.12);
+    border:1px solid rgba(232,200,119,.30);
+    color:#f3e0a8;letter-spacing:.04em;white-space:nowrap;
+  }
+  .badge-double{
+    display:inline-flex;align-items:center;gap:6px;
+    margin:8px 0 4px;
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;font-weight:800;
+    background:linear-gradient(90deg,#f7e7b0,#e8c877 55%,#d3ae5c);
+    color:#241a05;
+    box-shadow:0 0 20px rgba(232,200,119,.45);
+  }
+  .badge-seal{
+    display:inline-flex;align-items:center;gap:6px;
+    margin:10px 0 2px;
+    font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;font-weight:800;
+    background:linear-gradient(90deg,#ffd873,#f0b93c);
+    color:#231803;
+    box-shadow:0 0 22px rgba(255,205,90,.55);
+    animation:pulseSeal 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseSeal{0%,100%{box-shadow:0 0 18px rgba(255,205,90,.35);}50%{box-shadow:0 0 32px rgba(255,205,90,.75);}}
+
+  .sect{margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.075);}
+  .sect:first-of-type{border-top:none;padding-top:2px;}
+  .sect h4{
+    margin:0 0 5px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+    color:#e8c877;font-weight:700;
+  }
+  .sect p{margin:0;font-size:14px;line-height:1.55;color:rgba(246,241,231,.93);}
+  .sect.seal-sect p{color:#ffeec2;}
+  .sect.portal-sect h4{color:#ffd873;}
+
+  /* ---------- QUICK CHIPS ---------- */
+  .quick-row{
+    flex:0 0 auto;
+    display:flex;gap:8px;overflow-x:auto;
+    padding:4px 14px 8px;
+    scrollbar-width:none;
+  }
+  .quick-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    font-size:12.5px;white-space:nowrap;
+    padding:8px 14px;border-radius:999px;cursor:pointer;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(232,200,119,.24);
+    color:rgba(246,241,231,.85);
+    transition:.18s;
+  }
+  .chip:active{background:rgba(232,200,119,.20);color:#fff6d6;transform:scale(.97);}
+
+  /* ---------- COMPOSER ---------- */
+  .composer{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:9px;
+    padding:8px 14px 10px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(6,10,32,0),rgba(6,10,32,.85) 45%);
+  }
+  .composer input{
+    flex:1 1 auto;min-width:0;
+    height:46px;border-radius:23px;
+    padding:0 17px;
+    font-size:14.5px;
+    color:#f6f1e7;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(232,200,119,.22);
+    outline:none;
+    -webkit-backdrop-filter:blur(14px);
+    backdrop-filter:blur(14px);
+    transition:.2s;
+  }
+  .composer input::placeholder{color:rgba(246,241,231,.38);font-size:13.5px;}
+  .composer input:focus{border-color:rgba(232,200,119,.6);box-shadow:0 0 0 3px rgba(232,200,119,.12);}
+  .send-btn{
+    flex:0 0 auto;width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:none;cursor:pointer;
+    background:linear-gradient(145deg,#fbeec0,#e8c877 60%,#c6a250);
+    color:#241a05;font-size:17px;
+    box-shadow:0 8px 22px rgba(232,200,119,.34);
+    transition:.16s;
+  }
+  .send-btn:active{transform:scale(.93);}
+
+  /* ---------- TABBAR ---------- */
+  .tabbar{
+    flex:0 0 auto;
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:2px;
+    padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+    background:rgba(9,14,38,.78);
+    -webkit-backdrop-filter:blur(22px);
+    backdrop-filter:blur(22px);
+    border-top:1px solid rgba(232,200,119,.15);
+  }
+  .tab{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:6px 2px;border:none;background:transparent;cursor:pointer;
+    color:rgba(246,241,231,.42);
+    font-size:9.5px;letter-spacing:.03em;
+    border-radius:14px;transition:.2s;
+  }
+  .tab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .tab.active{color:#e8c877;background:rgba(232,200,119,.10);}
+  .tab:active{transform:scale(.95);}
+
+  /* ---------- SCROLL PAGE (codes / archive / path) ---------- */
+  .page{
+    flex:1 1 auto;min-height:0;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:4px 14px calc(20px + env(safe-area-inset-bottom));
+    scrollbar-width:none;
+  }
+  .page::-webkit-scrollbar{display:none;}
+
+  .page-title{
+    font-size:19px;font-weight:700;margin:6px 0 3px;
+    letter-spacing:.01em;
+  }
+  .page-sub{
+    font-size:12px;color:rgba(246,241,231,.5);margin:0 0 16px;line-height:1.5;
+  }
+
+  /* ---------- CODES LIST ---------- */
+  .code-item{
+    display:flex;align-items:center;gap:13px;
+    padding:13px 15px;margin-bottom:9px;
+    border-radius:16px;cursor:pointer;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);
+    transition:.2s;
+  }
+  .code-item:active{background:rgba(232,200,119,.12);border-color:rgba(232,200,119,.3);}
+  .code-item .num{
+    font-size:17px;font-weight:800;letter-spacing:.05em;flex:0 0 auto;width:66px;
+    background:linear-gradient(180deg,#fff6d6,#e8c877 60%,#c19d4b);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .code-item .theme{
+    font-size:13px;color:rgba(246,241,231,.78);flex:1 1 auto;
+  }
+  .code-item .arrow{color:rgba(232,200,119,.5);font-size:15px;}
+
+  /* ---------- ARCHIVE ---------- */
+  .progress-wrap{
+    margin:0 0 18px;
+    padding:14px 16px;border-radius:18px;
+    background:linear-gradient(150deg,rgba(232,200,119,.10),rgba(255,255,255,.045));
+    border:1px solid rgba(232,200,119,.25);
+  }
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .progress-top span:first-child{font-size:12.5px;color:rgba(246,241,231,.8);}
+  .progress-top span:last-child{font-size:13px;font-weight:700;color:#e8c877;}
+  .bar{height:7px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden;}
+  .bar-fill{
+    height:100%;border-radius:999px;width:0;
+    background:linear-gradient(90deg,#c9a350,#f7e7b0);
+    box-shadow:0 0 14px rgba(232,200,119,.6);
+    transition:width .6s cubic-bezier(.22,.9,.28,1);
+  }
+  .group-title{
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:#e8c877;font-weight:700;margin:20px 0 11px;
+  }
+  .group-title::before{content:"";width:16px;height:1px;background:rgba(232,200,119,.6);}
+  .group-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,200,119,.35),transparent);}
+
+  .art-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .artifact{
+    position:relative;border-radius:16px;overflow:hidden;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.09);
+    transition:.22s;
+  }
+  .artifact.seal{border-color:rgba(232,200,119,.45);box-shadow:0 0 20px rgba(232,200,119,.16);}
+  .artifact.open{cursor:pointer;}
+  .artifact.open:active{transform:scale(.975);}
+  .artifact.locked{opacity:.62;}
+  .thumb{
+    position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;background:#04060d;
+  }
+  .thumb .ph{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Courier New",ui-monospace,monospace;
+    font-size:19px;font-weight:700;letter-spacing:.14em;
+    color:#39ff88;
+    text-shadow:0 0 8px rgba(57,255,136,.95),0 0 22px rgba(57,255,136,.6),0 0 40px rgba(57,255,136,.3);
+    background:radial-gradient(circle at 50% 50%,#06110a 0%,#020503 78%);
+  }
+  .thumb img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    opacity:0;transition:opacity .4s;
+  }
+  .thumb img.loaded{opacity:1;}
+  .thumb .lock-ico{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:26px;color:rgba(246,241,231,.30);
+    background:rgba(4,6,14,.72);
+    -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+  }
+  .artifact .cap{
+    padding:8px 10px 10px;
+    font-size:11px;line-height:1.35;font-weight:600;
+    color:rgba(246,241,231,.82);
+    letter-spacing:.01em;
+  }
+  .artifact.seal .cap{color:#f3e0a8;}
+  .artifact .cap small{display:block;font-size:9.5px;font-weight:500;color:rgba(246,241,231,.4);margin-top:2px;letter-spacing:.06em;}
+
+  .art-detail{
+    margin-top:12px;padding:14px 15px;border-radius:16px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(232,200,119,.24);
+    font-size:13.5px;line-height:1.55;color:rgba(246,241,231,.9);
+    animation:rise .35s ease both;
+  }
+  .art-detail h5{margin:0 0 6px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#e8c877;}
+
+  /* ---------- PATH ---------- */
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .stat{
+    padding:14px 15px;border-radius:17px;
+    background:rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.09);
+  }
+  .stat .v{
+    font-size:24px;font-weight:800;line-height:1.1;
+    background:linear-gradient(180deg,#fff6d6,#e8c877 60%,#c19d4b);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(246,241,231,.45);margin-top:5px;}
+
+  .status-card{
+    padding:16px;border-radius:18px;margin-bottom:14px;
+    background:linear-gradient(150deg,rgba(232,200,119,.14),rgba(255,255,255,.045));
+    border:1px solid rgba(232,200,119,.32);
+    text-align:center;
+  }
+  .status-card .crown{font-size:26px;line-height:1;margin-bottom:6px;}
+  .status-card h3{margin:0;font-size:16px;font-weight:700;color:#f7e7b0;letter-spacing:.02em;}
+  .status-card p{margin:5px 0 0;font-size:12px;color:rgba(246,241,231,.6);line-height:1.45;}
+
+  .log-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 14px;margin-bottom:8px;border-radius:14px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .log-item .t{font-size:15px;font-weight:700;color:#e8c877;letter-spacing:.04em;width:58px;flex:0 0 auto;}
+  .log-item .d{font-size:11.5px;color:rgba(246,241,231,.45);flex:1 1 auto;}
+  .log-item .b{font-size:10px;padding:3px 8px;border-radius:999px;background:rgba(232,200,119,.14);color:#f3e0a8;border:1px solid rgba(232,200,119,.24);}
+
+  .btn-gold{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;height:50px;border-radius:16px;border:none;cursor:pointer;
+    font-size:14.5px;font-weight:700;letter-spacing:.02em;
+    color:#241a05;
+    background:linear-gradient(145deg,#fbeec0,#e8c877 60%,#c6a250);
+    box-shadow:0 10px 28px rgba(232,200,119,.28);
+    transition:.16s;
+    margin-top:6px;
+  }
+  .btn-gold:active{transform:scale(.975);}
+
+  .empty{
+    text-align:center;padding:34px 20px;color:rgba(246,241,231,.38);
+    font-size:13px;line-height:1.6;
+  }
+
+  /* ---------- FLASH / TOAST ---------- */
+  #flash{
+    position:fixed;inset:0;z-index:80;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 38%,rgba(255,240,180,.95),rgba(232,200,119,.42) 38%,transparent 72%);
+    transition:opacity .55s ease;
+  }
+  #flash.on{opacity:1;transition:opacity .09s ease;}
+
+  #toast{
+    position:fixed;left:50%;bottom:88px;transform:translate(-50%,14px);
+    z-index:90;pointer-events:none;
+    padding:11px 20px;border-radius:999px;
+    background:rgba(20,26,58,.95);
+    border:1px solid rgba(232,200,119,.4);
+    color:#f7e7b0;font-size:12.5px;white-space:nowrap;
+    opacity:0;transition:.3s;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #toast.on{opacity:1;transform:translate(-50%,0);}
+
+  #onboarding{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,23,.95);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);transition:opacity .45s ease;}
+#onboarding.hide{opacity:0;pointer-events:none;}
+.ob-wrap{width:100%;max-width:410px;display:flex;flex-direction:column;align-items:center;animation:rise .4s ease both;}
+.ob-img{width:100%;max-height:70vh;object-fit:contain;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,.75),0 0 28px rgba(232,200,119,.25);}
+.ob-dots{display:flex;justify-content:center;gap:8px;margin:14px 0 12px;}
+.ob-dots i{width:8px;height:8px;border-radius:999px;background:rgba(255,255,255,.22);transition:.3s;}
+.ob-dots i.on{width:24px;background:#e8c877;}
+.typing{display:inline-flex;gap:5px;align-items:center;padding:3px 0;}3px 0;}
+  .typing i{width:6px;height:6px;border-radius:50%;background:rgba(232,200,119,.75);animation:blink 1.2s infinite;}
+  .typing i:nth-child(2){animation-delay:.18s;}
+  .typing i:nth-child(3){animation-delay:.36s;}
+  @keyframes blink{0%,60%,100%{opacity:.25;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+</style>
+</head>
+<body>
+
+<div id="onboarding" style="display:none;">
+  <div class="ob-wrap">
+    <img class="ob-img" id="obImg" src="intro_1.png" alt="Код ангела" />
+    <div class="ob-dots"><i class="on" id="d0"></i><i id="d1"></i><i id="d2"></i></div>
+    <button class="btn-gold" id="obNext">Далее →</button>
+  </div>
+</div>
+<script>
+(function(){
+  if(localStorage.getItem('angel_onboarded_v1')==='1') return;
+  const slides=[
+    {img:'intro_1.png',btn:'Далее →'},
+    {img:'intro_2.png',btn:'Далее →'},
+    {img:'intro_3.png',btn:'✦ Начать путь'}
+  ];
+  let cur=0;
+  const box=document.getElementById('onboarding');
+  box.style.display='flex';
+  document.getElementById('obNext').onclick=function(){
+    cur++;
+    if(cur<slides.length){
+      document.getElementById('obImg').src=slides[cur].img;
+      this.textContent=slides[cur].btn;
+      [0,1,2][0,1,2].forEach(i=>document.getElementById('d'+i).classList.toggle('on',i===cur));
+    }else{
+      localStorage.setItem('angel_onboarded_v1','1');
+      box.classList.add('hide');
+      setTimeout(()=>box.remove(),460);
+    }
+  };
+})();
+</script>
+<div id="flash"></div>
+<div id="toast"></div>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark">✦</div>
+      <div>
+        <h1>Код ангела</h1>
+        <p>Оракул парного времени</p>
+      </div>
+    </div>
+     
+  <button class="ghost-btn" id="musicBtn" title="Фоновая музыка" style="color:#e8c877;border-color:rgba(232,200,119,.35);">🔇</button></header><audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
+
+  <main>
+
+    <!-- ============ VIEW 1 : CHAT ============ -->
+    <section id="view-chat" class="view active">
+      <div class="chat-scroll" id="chatScroll"></div>
+
+      <div class="quick-row" id="quickRow">
+        <button class="chip" data-q="Что значит на часах 12:12?">Что значит 12:12?</button>
+        <button class="chip" data-q="Случайно увидел 19:19">Случайно увидел 19:19</button>
+        <button class="chip" data-q="Мне попалось 11:11">Мне попалось 11:11</button>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <input id="msgInput" type="text" inputmode="text" placeholder="Напиши, какие цифры ты увидел…" />
+        <button class="send-btn" type="submit" aria-label="Отправить">➤</button>
+      </form>
+    </section>
+
+    <!-- ============ VIEW 2 : CODES ============ -->
+    <section id="view-codes" class="view">
+      <div class="page">
+        <h2 class="page-title">24 Кода</h2>
+        <p class="page-sub">Каждый парный час — отдельный ключ. Нажми на код, чтобы увидеть его суть.</p>
+        <div id="codesList"></div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 3 : ARCHIVE ============ -->
+    <section id="view-archive" class="view">
+      <div class="page">
+        <h2 class="page-title">Тайный архив</h2>
+        <p class="page-sub">30 кадров, пойманных в моменты совпадений. Каждый хранит свою вибрацию.</p>
+
+        <div class="progress-wrap">
+          <div class="progress-top">
+            <span>Открыто кадров</span>
+            <span id="progressLabel">0 из 30</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="group-title">Печати Высших Порталов</div>
+        <div class="art-grid" id="sealsGrid"></div>
+
+        <div class="group-title">Живые Артефакты</div>
+        <div class="art-grid" id="livingGrid"></div>
+
+        <div id="artDetail"></div>
+      </div>
+    </section>
+
+    <!-- ============ VIEW 4 : PATH ============ -->
+    <section id="view-path" class="view">
+      <div class="page">
+        <h2 class="page-title">Мой путь</h2>
+        <p class="page-sub">Твоя личная летопись знаков и совпадений.</p>
+
+        <div class="status-card">
+          <div class="crown" id="statusIcon">🕯</div>
+          <h3 id="statusTitle">Ученик Знаков</h3>
+          <p id="statusDesc">Первый шаг уже сделан. Продолжай замечать.</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat"><div class="v" id="statTotal">0</div><div class="k">Поймано знаков</div></div>
+          <div class="stat"><div class="v" id="statFreq">—</div><div class="k">Частое число</div></div>
+          <div class="stat"><div class="v" id="statUniq">0</div><div class="k">Разных кодов</div></div>
+          <div class="stat"><div class="v" id="statArt">0</div><div class="k">Артефактов</div></div>
+        </div>
+
+        <div class="group-title">Последние знаки</div>
+        <div id="logList"></div>
+
+        <button class="btn-gold" id="shareBtn">✦ Поделиться посланием</button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab active" data-view="chat">
+      <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.8-.9L3 21l1.9-5.2A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z"/></svg>
+      <span>Послание</span>
+    </button>
+    <button class="tab" data-view="codes">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>24 Кода</span>
+    </button>
+    <button class="tab" data-view="archive">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M9 4v5"/></svg>
+      <span>Архив</span>
+    </button>
+    <button class="tab" data-view="path">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-9.6A4.4 4.4 0 0 1 12 8a4.4 4.4 0 0 1 7 3.4C19 16.6 12 21 12 21z"/></svg>
+      <span>Мой путь</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+/* =====================================================================
+   КОД АНГЕЛА — полностью автономное приложение
+   ===================================================================== */
+
+/* ------------------------- ХРАНИЛИЩЕ ------------------------- */
+const store = {
+  get(k, def){ try{ const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); }catch(e){ return def; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ------------------------- БАЗА 24 КОДОВ -------------------------
+   Для каждого часа: 4 сферы × 3 уникальных варианта = 12 текстов.
+   ------------------------------------------------------------------ */
+const CODES = {
+
+"00:00": {
+  theme: "Нулевая точка",
+  angel: [
+    "Ноль — это не пустота, а лоно. Всё, что закончилось, уже собрано в семя нового.",
+    "Круг замкнулся мягко: небо гасит старые счета и оставляет тебе чистый лист без долгов.",
+    "В этот час ангелы выравнивают чашу твоей судьбы до краёв — ни убыло, ни прибыло, только тишина перед вдохом."
+  ],
+  love: [
+    "В отношениях наступил нулевой меридиан: можно заново договориться о самом главном, без груза прошлых обид.",
+    "Сердце просит тишины, а не выяснений. Позволь чувству отдохнуть — оно вернётся обновлённым.",
+    "Тот, кто рядом, ждёт твоего первого шага без условий. Начни с простого: «я рад, что ты есть»."
+  ],
+  business: [
+    "Не спеши запускать новое — сначала обнули старые обязательства. Чистый старт любит пустые полки.",
+    "Финансовый круг замкнулся: подведи итог, закрой долги и только потом строй следующий этаж.",
+    "Идея, пришедшая в этот час, ещё в семени. Не требуй от неё плодов раньше срока."
+  ],
+  family: [
+    "Дом — это место, где тебя считают с нуля, без прошлых ошибок. Позволь близким увидеть тебя заново.",
+    "Тишина за семейным столом сегодня ценнее громких решений. Просто побудь рядом.",
+    "Семейный круг начинается с одного спокойного слова. Скажи его первым."
+  ]
+},
+
+"01:01": {
+  theme: "Первый удар нового",
+  angel: [
+    "Единица — это первый удар сердца нового цикла. Небо говорит: начни, и путь появится под ногой.",
+    "В этот час ангелы ставят точку, из которой растёт линия. Всё, что ты откладывал, ждёт одного честного шага.",
+    "Ты стоишь у истока. Не нужно видеть всю реку — достаточно сделать первое движение в её сторону."
+  ],
+  love: [
+    "В любви открывается новая глава. Позволь себе быть любопытным, а не осторожным.",
+    "Один искренний разговор может развернуть ваши отношения к свету. Начни его.",
+    "Сердце учится ходить заново. Не сравнивай этот шаг с прошлыми."
+  ],
+  business: [
+    "Первый шаг в деле важнее идеального плана. Начни с малого в ближайший час.",
+    "Вселенная поддерживает инициативу: напиши, позвони, предложи — дверь откроется.",
+    "Новое дело прорастает из одного решительного действия. Сделай его сегодня."
+  ],
+  family: [
+    "В доме зарождается новая традиция — начни с простого совместного ритуала.",
+    "Первый шаг к близким всегда твой. Позвони первым, и лёд растает.",
+    "Семья ждёт твоего предложения начать заново. Скажи вслух, что хочешь тепла."
+  ]
+},
+
+"02:02": {
+  theme: "Зеркало союза",
+  angel: [
+    "Двойка — знак союза. Небо напоминает: ты не один, рядом всегда есть поддерживающая рука.",
+    "В этот час ангелы сводят две линии в одну. Доверься тому, кто идёт рядом.",
+    "Там, где ты видишь выбор из двух, Вселенная видит мост. Не разрывай связь — соединяй."
+  ],
+  love: [
+    "Партнёрство просит честности, а не жертвы. Скажи, что чувствуешь, мягко и прямо.",
+    "Двое становятся сильнее, когда каждый остаётся собой. Не растворяйся — соединяйся.",
+    "В любви важен баланс: сегодня больше слушай, чем говори."
+  ],
+  business: [
+    "Хорошее партнёрство принесёт больше, чем одиночная гонка. Присмотрись к союзнику.",
+    "Делегируй — и дело пойдёт быстрее. Доверие к людям сейчас выгоднее контроля.",
+    "Договор, заключённый в этот час, будет крепким, если в нём учтены интересы обоих."
+  ],
+  family: [
+    "В семье сегодня важна не правота, а связь. Выбери разговор вместо спора.",
+    "Двое близких ждут твоего внимания. Раздели время поровну и без вины.",
+    "Мир в доме начинается с того, кто первым уступает. Уступи — и выиграешь больше."
+  ]
+},
+
+"03:03": {
+  theme: "Дыхание роста",
+  angel: [
+    "Тройка — дыхание роста. Всё, что ты посадил, уже пробивается сквозь землю.",
+    "В этот час небо посылает поддержку наставников. Ты не брошен в пути.",
+    "Слово, сказанное сейчас, обладает силой семени. Говори о желаемом, а не о страхе."
+  ],
+  love: [
+    "Любовь растёт через выражение. Скажи комплимент, который давно держал в себе.",
+    "Тёплые слова сегодня творят чудеса. Не скупись на них.",
+    "Ваши чувства расцветают, но нужен свет — больше открытости, меньше догадок."
+  ],
+  business: [
+    "Творческий рост близок. Не бойся пробовать нестандартный подход.",
+    "Твои усилия дают первые всходы — продолжай поливать, результат будет.",
+    "Идею стоит озвучить. В разговоре она окрепнет и найдёт союзников."
+  ],
+  family: [
+    "В доме растёт новая радость. Заметь её и назови вслух.",
+    "Дети и младшие в семье нуждаются в твоём одобрении. Похвали искренне.",
+    "Семейное тепло приумножается, когда его делят. Соберите всех за одним столом."
+  ]
+},
+
+"04:04": {
+  theme: "Фундамент",
+  angel: [
+    "Четвёрка — фундамент. Небо просит укрепить основание, прежде чем строить выше.",
+    "В этот час ангелы выравнивают стены твоего дома. Всё, что шаталось, встаёт на место.",
+    "Порядок — это форма заботы о себе. Наведи его там, где тревожно."
+  ],
+  love: [
+    "Любовь любит надёжность. Сдержи обещание — даже самое маленькое.",
+    "Отношениям нужна опора: общий план, общий дом, общий ритм. Начните с малого.",
+    "Спокойствие в паре дороже страсти. Выбери стабильность сегодня."
+  ],
+  business: [
+    "Хорошее время для систем: структура, таблицы, порядок в делах.",
+    "Не гонись за скачком — укрепи то, что уже работает.",
+    "Надёжный фундамент принесёт доход позже. Не пренебрегай скучной основой."
+  ],
+  family: [
+    "Дом просит заботы: починить, прибрать, утеплить. Это тоже любовь.",
+    "Семейные устои крепнут в тихих повседневных делах. Сделай одно из них сегодня.",
+    "Создай в доме уголок покоя — и близкие потянутся туда."
+  ]
+},
+
+"05:05": {
+  theme: "Ветер перемен",
+  angel: [
+    "Пятёрка — ветер перемен. Небо открывает окно, но шагнуть в него нужно тебе.",
+    "В этот час привычное расступается, уступая место новому. Не цепляйся за старое.",
+    "Перемены приходят как друзья, а не как угроза. Пригласи их в дом."
+  ],
+  love: [
+    "Любовь требует свежего воздуха. Попробуйте вместе что-то новое.",
+    "Рутина — не приговор. Добавь в отношения немного спонтанности.",
+    "Свобода в паре не разрушает, а укрепляет. Дай друг другу больше пространства."
+  ],
+  business: [
+    "Хороший час для смелых решений и смены курса.",
+    "Расширяй горизонты: новое направление, новый рынок, новый навык.",
+    "Не бойся рискнуть — Вселенная страхует тех, кто идёт."
+  ],
+  family: [
+    "Семье пойдёт на пользу перемена обстановки — даже маленькая поездка.",
+    "Разреши близким быть другими. Свобода в доме рождает доверие.",
+    "Путешествие, пусть даже мысленное, освежит семейный климат."
+  ]
+},
+
+"06:06": {
+  theme: "Гармония дома",
+  angel: [
+    "Шестёрка — гармония неба и земли. Небо просит уравновесить материальное и духовное.",
+    "В этот час ангелы напоминают: заботиться о себе — не эгоизм, а равновесие.",
+    "Красота вокруг тебя — это ответ неба. Заметь её в простых вещах."
+  ],
+  love: [
+    "Любовь живёт в заботе, а не в словах. Сделай что-то тёплое для близкого.",
+    "В отношениях пора уравновесить давать и принимать. Не только отдавай.",
+    "Дом, где тебя любят, начинается с тебя самого. Полюби свой быт."
+  ],
+  business: [
+    "Деньги любят гармонию: приведи в порядок расходы и доходы.",
+    "Работа не должна разрушать дом. Найди баланс, и прибыль возрастёт.",
+    "Хорошее время для дел, связанных с красотой, уютом и заботой."
+  ],
+  family: [
+    "Семья — это твоя тихая гавань. Верни ей внимание, которое забирала суета.",
+    "Создай уют в доме: свеча, плед, тёплый чай — и близкие оттают.",
+    "Забота о родителях и старших вернётся к тебе благодарностью."
+  ]
+},
+
+"07:07": {
+  theme: "Врата мудрости",
+  angel: [
+    "Семёрка — врата мудрости. Небо шепчет: ответ уже внутри тебя.",
+    "В этот час интуиция становится громче логики. Прислушайся к тихому внутреннему голосу.",
+    "Ты на верном пути, даже если он выглядит как тропа в тумане. Доверься."
+  ],
+  love: [
+    "Сердце знает больше, чем разум. Позволь себе почувствовать правду.",
+    "Не ищи доказательств любви — почувствуй её в мелочах.",
+    "Доверие — это выбор. Сделай его сегодня."
+  ],
+  business: [
+    "Хорошее время для анализа и стратегии. Не спеши, но и не стой.",
+    "Твоя интуиция в делах сейчас точнее любых прогнозов. Доверься чутью.",
+    "Углубись в дело, а не разбрасывайся. Глубина принесёт результат."
+  ],
+  family: [
+    "В семье нужна мудрость, а не правота. Выбери тишину вместо упрёка.",
+    "Позволь близким побыть наедине с собой. Тишина в доме тоже любовь.",
+    "Семейный опыт — не тяжесть, а сокровище. Поделись им бережно."
+  ]
+},
+
+"08:08": {
+  theme: "Изобилие",
+  angel: [
+    "Восьмёрка — знак изобилия и силы. Небо говорит: ты способен больше, чем думаешь.",
+    "В этот час открываются двери достатка. Приготовься принять.",
+    "Всё, что ты вложил, начинает возвращаться. Не отворачивайся от награды."
+  ],
+  love: [
+    "Любовь и достаток идут рядом: не бойся желать и того, и другого.",
+    "В отношениях время честно поговорить о планах и деньгах.",
+    "Щедрость в любви возвращается сторицей. Подари что-то от души."
+  ],
+  business: [
+    "Сильный час для финансов и карьеры. Действуй уверенно.",
+    "Твоя сила в деле — в последовательности. Не сбавляй темп.",
+    "Вложения в себя сейчас дадут лучший доход, чем любые акции."
+  ],
+  family: [
+    "Семейное благополучие растёт, когда ты делишься своей силой.",
+    "Возьми на себя ответственность за мир в доме — и он станет крепостью.",
+    "Благодарность близким приумножит достаток семьи."
+  ]
+},
+
+"09:09": {
+  theme: "Завершение цикла",
+  angel: [
+    "Девятка — завершение цикла. Небо просит отпустить то, что уже отслужило.",
+    "В этот час закрывается старая глава. Не держи книгу открытой.",
+    "Освободи руки — иначе не сможешь принять новое."
+  ],
+  love: [
+    "Отпусти прошлые обиды. Они не часть любви, а её тень.",
+    "Прощение сегодня — это подарок себе, а не партнёру.",
+    "В отношениях пора завершить то, что давно исчерпало себя."
+  ],
+  business: [
+    "Закрой старые проекты и долги. Место для нового освободится.",
+    "Не тяни с тем, что не растёт. Освободи энергию.",
+    "Завершение — это тоже успех. Отметь его."
+  ],
+  family: [
+    "Семейная история требует прощания с чем-то старым — привычкой, обидой, вещью.",
+    "Отпусти контроль над близкими. Они справятся.",
+    "Заверши незаконченный разговор — и в доме станет легче."
+  ]
+},
+
+"10:10": {
+  theme: "Обновление",
+  angel: [
+    "Единица и ноль вместе — врата нового. Небо открывает проход между мирами.",
+    "В этот час твой путь выпрямляется. Иди, не оглядываясь.",
+    "Обновление приходит без усилий, если не сопротивляться."
+  ],
+  love: [
+    "В любви наступает новая полоса — более спокойная и светлая.",
+    "Позволь отношениям обновиться, не пытаясь вернуть старую форму.",
+    "Сердце открыто новому. Впусти."
+  ],
+  business: [
+    "Двери карьеры приоткрыты. Сделай шаг.",
+    "Новый уровень требует нового мышления. Обнови подход.",
+    "Проект, начатый сейчас, будет расти долго. Заложи доброе основание."
+  ],
+  family: [
+    "Дому нужна свежая струя — небольшие перемены принесут покой.",
+    "Открой близким новую грань себя. Они удивятся и обрадуются.",
+    "Начни в семье новую традицию, которая переживёт годы."
+  ]
+},
+
+"11:11": {
+  theme: "Портал желания",
+  angel: [
+    "Врата открыты. Вселенная слышит твоё желание в этот самый миг.",
+    "В этот час ангелы выстраиваются вокруг тебя. Загаданное уже движется к тебе.",
+    "Ты — проводник света. То, о чём ты думаешь сейчас, имеет огромную силу."
+  ],
+  love: [
+    "В любви наступает момент истины: желай ясно и честно.",
+    "Родственная душа ближе, чем кажется. Будь открыт.",
+    "Скажи о своих чувствах — Вселенная усилит слова."
+  ],
+  business: [
+    "Портал открыт для новых возможностей. Сформулируй цель точно.",
+    "Момент для запуска. Действуй в потоке.",
+    "Твоя идея проходит через врата — не тормози её."
+  ],
+  family: [
+    "Загадай желание для всей семьи — врата слышат.",
+    "Семья — твой портал силы. Соберите энергию вместе.",
+    "Прости и отпусти — и врата откроются для всего рода."
+  ]
+},
+
+"12:12": {
+  theme: "Порядок и зрелость",
+  angel: [
+    "Двенадцать — завершённый круг. Небо говорит: ты прошёл урок, двигайся дальше.",
+    "В этот час порядок восстанавливается. Всё встаёт на свои места.",
+    "Рост возможен только через отпускание старого. Ты готов."
+  ],
+  love: [
+    "Любовь просит зрелости: перестань ждать идеала и увидь реального человека.",
+    "В отношениях наступает новый этап взросления.",
+    "Отпусти детские ожидания — и любовь станет глубже."
+  ],
+  business: [
+    "Цикл завершается — подведи итоги и наметь новые цели.",
+    "Опыт, который ты накопил, теперь станет твоим капиталом.",
+    "Время структурировать планы на следующий цикл."
+  ],
+  family: [
+    "Семейный круг завершает оборот — поблагодари каждого.",
+    "Пора отпустить старые роли в семье и позволить всем повзрослеть.",
+    "Дом готов к новой главе. Открой её вместе."
+  ]
+},
+
+"13:13": {
+  theme: "Трансформация",
+  angel: [
+    "Тринадцать — не несчастье, а трансформация. Небо снимает старую кожу.",
+    "В этот час ангелы проводят тебя через изменение. Не бойся.",
+    "То, что кажется потерей, — на самом деле освобождение."
+  ],
+  love: [
+    "Любовь проходит проверку на прочность. Не бойся честности.",
+    "Отношения меняются: отпусти то, что было, и посмотри, что останется.",
+    "Смелость в чувствах сейчас важнее осторожности."
+  ],
+  business: [
+    "Хороший момент для реформ и изменений в деле.",
+    "Перестройка принесёт больше, чем латание старого.",
+    "Не бойся уйти с неверного пути — Вселенная поддержит."
+  ],
+  family: [
+    "Семейные устои меняются. Это не разрушение, а рост.",
+    "Прими изменения в доме и найди в них новую опору.",
+    "Трансформация семьи начинается с одного смелого разговора."
+  ]
+},
+
+"14:14": {
+  theme: "Умеренность и терпение",
+  angel: [
+    "Единица и четвёрка — умеренность и терпение. Небо учит не спешить.",
+    "В этот час всё идёт своим чередом. Не подгоняй.",
+    "Терпение — это форма доверия. Доверься ритму."
+  ],
+  love: [
+    "Любовь требует времени. Не форсируй события.",
+    "Умеренность в чувствах сохранит их надолго.",
+    "Дай отношениям дышать, не сжимай их."
+  ],
+  business: [
+    "Не гонись за быстрым результатом — он придёт в своё время.",
+    "Умеренные, но постоянные усилия принесут больше, чем рывки.",
+    "Хорошее время для планирования, а не для спешки."
+  ],
+  family: [
+    "Дом любит размеренность. Не торопи близких.",
+    "Терпение в семье сегодня — самый ценный подарок.",
+    "Пусть всё идёт своим чередом. Спокойствие вернётся."
+  ]
+},
+
+"15:15": {
+  theme: "Огонь творения",
+  angel: [
+    "Пятёрка и единица — страсть и воля. Небо разжигает огонь.",
+    "В этот час творческая энергия бьёт ключом. Направь её.",
+    "Желание — это топливо. Не гаси его."
+  ],
+  love: [
+    "Страсть возвращается в отношения. Не бойся её.",
+    "Творчество в любви — это внимание и игры. Добавь их.",
+    "Скажи о желаниях вслух. Это сблизит."
+  ],
+  business: [
+    "Хорошее время для творческих проектов и смелых идей.",
+    "Вложи страсть в дело — и результат превзойдёт ожидания.",
+    "Не бойся быть ярким. Твоя энергия привлекает людей."
+  ],
+  family: [
+    "Внеси в дом больше игры и радости.",
+    "Творчество объединяет семью — сделайте что-то вместе.",
+    "Разреши себе и близким больше смеха."
+  ]
+},
+
+"16:16": {
+  theme: "Забота и опора",
+  angel: [
+    "Шестёрка и единица — забота и лидерство. Небо просит взять ответственность с любовью.",
+    "В этот час гармония в доме зависит от тебя — и это сила, а не ноша.",
+    "Заботься, но не управляй. В этом разница мудрости."
+  ],
+  love: [
+    "В отношениях ты — опора. Но помни и о себе.",
+    "Забота о партнёре не должна стирать тебя.",
+    "Создай в паре ощущение дома. Это важнее слов."
+  ],
+  business: [
+    "Дело требует заботы, как сад. Уделяй ему время.",
+    "Хорошее время для проектов, связанных с домом, семьёй, уютом.",
+    "Управляй мягко — люди пойдут за тобой."
+  ],
+  family: [
+    "Семья в центре внимания. Удели ей этот час.",
+    "Забота о близких возвращается сторицей.",
+    "Дом — твоё главное дело сегодня."
+  ]
+},
+
+"17:17": {
+  theme: "Вера и награда",
+  angel: [
+    "Семёрка и единица — вера и награда. Небо подтверждает: ты на верном пути.",
+    "В этот час награда ближе, чем кажется. Не сходи с дистанции.",
+    "Вера — это не слепота, а знание без доказательств."
+  ],
+  love: [
+    "Верь в свою любовь, даже если сейчас трудно.",
+    "Награда в отношениях — близость. Она уже близко.",
+    "Доверься партнёру — и увидишь, как он раскроется."
+  ],
+  business: [
+    "Усилия будут вознаграждены. Продолжай.",
+    "Верь в свой проект — и люди поверят вместе с тобой.",
+    "Хорошее время для смелых ставок на себя."
+  ],
+  family: [
+    "Семья получит награду за терпение. Не бросай начатое.",
+    "Верь в своих близких — они способны на большее.",
+    "Твоя вера в дом создаёт его будущее."
+  ]
+},
+
+"18:18": {
+  theme: "Воплощение",
+  angel: [
+    "Восьмёрка и единица — реализация и завершение. Небо говорит: пора воплощать.",
+    "В этот час мечты получают плоть. Действуй.",
+    "То, что ты создавал в мыслях, готово проявиться."
+  ],
+  love: [
+    "Любовь просит конкретики: не слова, а поступки.",
+    "Воплоти свою нежность в реальное действие.",
+    "Отношения переходят из мечты в реальность. Не испугайся."
+  ],
+  business: [
+    "Идеи созрели для реализации. Начинай.",
+    "Хорошее время для запуска и первых сделок.",
+    "Не откладывай — энергия на пике."
+  ],
+  family: [
+    "Планы для семьи готовы к воплощению. Сделайте первый шаг.",
+    "Создай то, о чём давно мечтали в доме.",
+    "Реализация семейной мечты начинается с малого дела."
+  ]
+},
+
+"19:19": {
+  theme: "Эхо закона",
+  angel: [
+    "Девятка и единица — завершение и новое начало. Круг замыкается и открывается.",
+    "В этот час небо закрывает старую дверь и открывает новую.",
+    "Всё, что было, послужило тебе. Отпусти с благодарностью."
+  ],
+  love: [
+    "Заверши то, что мешает любви. Освободи сердце.",
+    "Прошлое больше не имеет власти. Живи настоящим.",
+    "Любовь ждёт тебя по ту сторону прощения."
+  ],
+  business: [
+    "Хорошее время для завершения дел и закрытия долгов.",
+    "Освободи место для нового проекта.",
+    "Отпусти то, что не приносит дохода. Это мудрость."
+  ],
+  family: [
+    "Семейная история завершает главу. Поблагодари её.",
+    "Отпусти старые обиды — дом станет светлее.",
+    "Новое в семье придёт только после прощания со старым."
+  ]
+},
+
+"20:20": {
+  theme: "Тайна и интуиция",
+  angel: [
+    "Два и ноль — интуиция и тайна. Небо говорит: слушай тишину.",
+    "В этот час скрытое становится явным. Смотри внимательнее.",
+    "Доверься внутреннему знанию — оно старше твоих мыслей."
+  ],
+  love: [
+    "В любви есть тайна, которую не нужно разгадывать. Просто прими.",
+    "Слушай сердце — оно знает, кто твой.",
+    "Не всё в отношениях нужно объяснять. Иногда достаточно чувства."
+  ],
+  business: [
+    "Интуиция подскажет верное решение. Прислушайся.",
+    "Хорошее время для анализа скрытых рисков.",
+    "Не всё видно сразу. Дай проекту время раскрыться."
+  ],
+  family: [
+    "В семье есть непроговорённое. Мягко приоткрой завесу.",
+    "Тишина в доме может сказать больше слов. Будь внимателен.",
+    "Доверься чутью в отношениях с близкими."
+  ]
+},
+
+"21:21": {
+  theme: "Воля и лидерство",
+  angel: [
+    "Два и один — лидерство и союз. Небо даёт тебе силу вести.",
+    "В этот час проявляется твоя воля. Используй её с добром.",
+    "Ты можешь влиять на реальность. Выбирай слова осознанно."
+  ],
+  love: [
+    "В отношениях пришло время ясности. Скажи прямо.",
+    "Будь ведущим, но не давящим. Сила — в мягкости.",
+    "Прояви инициативу в любви — это украсит."
+  ],
+  business: [
+    "Хорошее время для проявления лидерства и амбиций.",
+    "Твой проект готов выйти на свет. Покажи его.",
+    "Действуй решительно — время на твоей стороне."
+  ],
+  family: [
+    "Возьми на себя роль миротворца в семье.",
+    "Твоё слово в доме сегодня имеет вес. Говори с любовью.",
+    "Прояви инициативу — собери семью вместе."
+  ]
+},
+
+"22:22": {
+  theme: "Созидание",
+  angel: [
+    "Две двойки — строительство и партнёрство. Небо благословляет созидание.",
+    "В этот час фундамент твоего будущего укрепляется.",
+    "Строй с любовью — и результат переживёт тебя."
+  ],
+  love: [
+    "Любовь просит строить, а не только чувствовать.",
+    "Вместе вы можете больше, чем по отдельности.",
+    "Заложите с партнёром общий фундамент на будущее."
+  ],
+  business: [
+    "Хорошее время для долгосрочных проектов.",
+    "Строй систему, а не разовый успех.",
+    "Партнёрство принесёт стабильный результат."
+  ],
+  family: [
+    "Семейный дом укрепляется. Вложи в него силы.",
+    "Стройте планы всей семьёй — они сбудутся.",
+    "То, что создадите сейчас, станет опорой на годы."
+  ]
+},
+
+"23:23": {
+  theme: "Тишина перед сном",
+  angel: [
+    "Двойка и тройка — завершение дня и рост. Небо просит отдохнуть.",
+    "В этот час день собирает плоды. Поблагодари его.",
+    "Сон — тоже рост. Отпусти день с миром."
+  ],
+  love: [
+    "Перед сном скажи близкому доброе слово. Оно останется.",
+    "Любовь крепнет в тишине ночи. Не тревожь её.",
+    "Отпусти тревоги дня — любовь никуда не денется."
+  ],
+  business: [
+    "Заверши день с чистой совестью. Завтра будет новый шанс.",
+    "Не бери рабочие тревоги в сон. Утро мудренее.",
+    "Поблагодари день за сделанное, даже если немного."
+  ],
+  family: [
+    "Пожелай близким спокойной ночи — это сильный оберег.",
+    "Дом засыпает. Укрой его своим спокойствием.",
+    "Семья получит отдых, если ты отпустишь контроль."
+  ]
+}
+
+};
+
+/* ------------------------- ПЕЧАТИ ВЫСШИХ ПОРТАЛОВ ------------------------- */
+const SEALS = {
+  "11:11": "Одиннадцать — это два столпа, держащие врата. В этот час открыт прямой канал между твоим намерением и тканью мира. Всё, что ты держишь в сердце, получает благословение и ускоряется. Не трать этот момент на страх — вложи в него мечту.",
+  "07:07": "Тройная семёрка — печать глубинной мудрости. Небо приоткрывает книгу твоей судьбы и позволяет прочесть строку, которую ты давно искал. Ответ придёт не словами, а ясным знанием. Просто замолчи и услышь.",
+  "09:09": "Девятка, повторённая дважды, — резонанс завершения. Всё отжившее теряет над тобой власть. Ангелы снимают с тебя груз чужих ожиданий и возвращают тебе твою настоящую меру.",
+  "13:13": "Тринадцать — не число беды, а печать смелых. В этот час ангелы дают силу пройти сквозь страх и выйти обновлённым. То, чего ты избегал, сегодня становится дверью.",
+  "12:12": "Двенадцать — замкнутый круг и полный год. Печать порядка: всё в твоей жизни встаёт на свои места, если ты перестанешь держать лишнее. Отпусти — и круг сам себя исцелит.",
+  "19:19": "Девятнадцать — двойное эхо закона. Всё, что ты отдал, возвращается; всё, что взял, будет отвечено. Живи так, чтобы это эхо звучало красиво."
+};
+
+/* ------------------------- САКРАЛЬНЫЕ ПОСЛАНИЯ ГОДА (Двойной Портал) ------------------------- */
+const DOUBLE_PORTAL_MESSAGES = {
+  1: "Первый месяц года — первый удар колокола. Печать января даёт силу начать с чистого листа без сожалений.",
+  2: "Февраль — месяц тишины под снегом. Печать февраля хранит то, что ещё не проросло: доверься скрытому росту.",
+  3: "Март — месяц пробуждения. Печать марта ломает лёд и открывает дорогу первой воде.",
+  4: "Апрель — месяц распахнутых окон. Печать апреля впускает в дом свежий воздух и новые возможности.",
+  5: "Май — месяц цветения. Печать мая напоминает: красота — тоже сила, и ею можно жить.",
+  6: "Июнь — месяц долгого света. Печать июня даёт тебе больше времени, чем ты думаешь.",
+  7: "Июль — месяц зрелого солнца. Печать июля исполняет то, что было посажено весной.",
+  8: "Август — месяц урожая. Печать августа просит собрать своё и не стыдиться достатка.",
+  9: "Сентябрь — месяц мудрости. Печать сентября открывает глаза на то, что раньше было скрыто.",
+  10: "Октябрь — месяц золотой тишины. Печать октября учит благодарности за то, что уже есть.",
+  11: "Ноябрь — месяц тонкой грани. Печать ноября открывает врата между мирами и делает сны явью.",
+  12: "Декабрь — месяц замкнутого круга. Печать декабря благословляет завершение и обещает новое начало."
+};
+
+/* ------------------------- 30 АРТЕФАКТОВ ------------------------- */
+const ARTIFACTS = [
+  /* --- ГРУППА 1: Печати Высших Порталов (6) --- */
+  { id:1, group:"seal", time:"11:11", title:"Портал 11 ноября", sub:"Печать Первая",
+    text:"Кадр, где стрелки замерли на одиннадцати и одиннадцати, — не совпадение, а фотография открытых врат. Такие моменты фиксируют тонкую границу между намерением и его исполнением: в этот миг небо слушает особенно внимательно." },
+  { id:2, group:"seal", time:"07:07", title:"Тройная семёрка", sub:"7 октября",
+    text:"Семь — число внутреннего знания. Кадр с двумя семёрками хранит мгновение, когда внутренний голос зазвучал громче внешнего шума. Это снимок тишины, в которой рождается ответ." },
+  { id:3, group:"seal", time:"09:09", title:"Резонанс девяток", sub:"9 ноября",
+    text:"Девятки на экране — знак завершённого цикла. Артефакт хранит энергию отпускания: всё, что должно было уйти, уходит легко и без потерь." },
+  { id:4, group:"seal", time:"13:13", title:"Печать смелых", sub:"Пятница 13 ноября",
+    text:"Число, которого боятся, на самом деле — печать смельчаков. Кадр с 13:13 хранит момент, когда страх был пройден и человек вышел из него другим." },
+  { id:5, group:"seal", time:"12:12", title:"Код внутри дня", sub:"11.11",
+    text:"Двенадцать внутри одиннадцати — двойная спираль порядка. Этот кадр — свидетельство того, что даже внутри портала может открыться второй, более глубокий." },
+  { id:6, group:"seal", time:"19:19", title:"Двойное эхо", sub:"7–8 октября",
+    text:"Девятнадцать — эхо закона причины и следствия. Снимок хранит момент, когда человек увидел, как его собственные поступки возвращаются к нему." },
+
+  /* --- ГРУППА 2: Живые Артефакты (24) --- */
+  { id:7,  group:"living", time:"18:18", title:"18:18 • 18 февраля", sub:"Резонанс изобилия",
+    text:"Восемнадцать на циферблате и восемнадцатый день февраля — редкое зеркало материального и духовного достатка. Кадр хранит момент, когда поток удачи открывается навстречу твоим планам." },
+  { id:8,  group:"living", time:"19:19", title:"19:19 • 19 февраля", sub:"Врата новой главы",
+    text:"Девятнадцатый час, девятнадцатая минута и девятнадцатое число — тройной знак завершения старого цикла. Этот артефакт фиксирует секунду, когда за спиной мягко закрывается прошлая дверь и открывается новая." },
+  { id:9,  group:"living", time:"18:18", title:"18:18 • 17 июня", sub:"Дыхание лета",
+    text:"Вечерний код изобилия, пойманный в разгар июня. Снимок хранит спокойную уверенность в том, что всё задуманное созреет точно в свой срок." },
+  { id:10, group:"living", time:"21:21", title:"21:21 • 17 июня", sub:"Дуэт одного дня",
+    text:"Второй ангельский сигнал за те же сутки (после 18:18). Число 21:21 говорит о гармонии мира и награде за верность себе — небо подтвердило утренний знак вечерним." },
+  { id:11, group:"living", time:"08:08", title:"08:08 • 19 июня", sub:"Знак бесконечности",
+    text:"Утренние восьмёрки — символ непрерывного потока энергии и поддержки. Кадр запечатлел момент, когда Вселенная напоминает: твои усилия не проходят даром." },
+  { id:12, group:"living", time:"01:01", title:"01:01 • 19 июля", sub:"Искра начала",
+    text:"Первый час и первая минута суток — чистый импульс творения. Артефакт хранит тишину ночи, в которой рождается самое верное намерение." },
+  { id:13, group:"living", time:"15:15", title:"15:15 • 15 июля", sub:"Тройной код перемен",
+    text:"Пятнадцать на часах и пятнадцатое число июля — мощный резонанс свободы и смелых шагов. Кадр хранит энергию счастливого поворота судьбы." },
+  { id:14, group:"living", time:"14:14", title:"14:14 • 29 июля", sub:"Равновесие духа",
+    text:"Две четырнадцатые вибрации — ангельский призыв к внутреннему балансу и терпению. Снимок фиксирует миг, когда суета отступает и приходит ясность." },
+  { id:15, group:"living", time:"04:04", title:"04:04 • 4 августа", sub:"Четыре опоры",
+    text:"Четвёртый час, четвёртая минута и четвёртый день августа — код незыблемой защиты. Этот артефакт напоминает: ангелы рядом и укрепляют фундамент твоей жизни." },
+  { id:16, group:"living", time:"08:08", title:"08:08 • 11 августа", sub:"Поток изобилия",
+    text:"Утренний резонанс восьмёрок в августе — знак щедрости Вселенной. Кадр хранит вибрацию открытых дверей и своевременных возможностей." },
+  { id:17, group:"living", time:"07:07", title:"07:07 • 14 сентября", sub:"Голос интуиции",
+    text:"Семёрки в начале осени — знак духовной проницательности. Снимок запечатлел мгновение, когда правильный ответ пришёл изнутри без лишних слов." },
+  { id:18, group:"living", time:"19:19", title:"19:19 • 7 октября", sub:"Вечернее эхо",
+    text:"Вечернее продолжение утренней магии седьмого октября. Артефакт хранит ощущение невидимого моста между началом и завершением важного дела." },
+  { id:19, group:"living", time:"06:06", title:"06:06 • 9 октября", sub:"Свет домашнего очага",
+    text:"Ранние шестёрки — знак любви, заботы и душевного тепла. Кадр хранит тихую уверенность в том, что близкие и дом находятся под светлой защитой." },
+  { id:20, group:"living", time:"10:10", title:"10:10 • 12 октября", sub:"Точка обновления",
+    text:"Единица и ноль в двойном повторе — символ перехода на новый виток. Снимок фиксирует секунду, когда прошлое отпущено с благодарностью." },
+  { id:21, group:"living", time:"12:12", title:"12:12 • 20 октября", sub:"Высший порядок",
+    text:"Двенадцать и двенадцать — знак того, что все события складываются в единый гармоничный узор. Кадр хранит состояние покоя и доверия миру." },
+  { id:22, group:"living", time:"07:07", title:"07:07 • 5 ноября", sub:"Утреннее озарение",
+    text:"Семёрки в ноябрьское утро — подтверждение того, что ты идёшь своей дорогой. Артефакт хранит чистую энергию вдохновения и удачи." },
+  { id:23, group:"living", time:"11:11", title:"11:11 • 6 ноября", sub:"Предвестник портала",
+    text:"Четыре единицы за пять дней до главного ноябрьского портала. Кадр хранит первый звонок Вселенной, настраивающий сердце на исполнение желания." },
+  { id:24, group:"living", time:"20:20", title:"20:20 • 14 ноября", sub:"Тишина мудрости",
+    text:"Двадцать и двадцать — число глубокого понимания и чуткости. Снимок запечатлел вечерний миг, когда интуиция становится главным компасом." },
+  { id:25, group:"living", time:"10:10", title:"10:10 • 20 ноября", sub:"Утренний импульс",
+    text:"Десятый час десятой минуты — знак смелого старта. Артефакт хранит энергию пробуждения и готовности принять подарки судьбы." },
+  { id:26, group:"living", time:"16:16", title:"16:16 • 20 ноября", sub:"Гармония одного дня",
+    text:"Второй знак за двадцатое ноября, дополняющий утреннее 10:10. Число 16:16 напоминает о равновесии между мечтами и земными шагами." },
+  { id:27, group:"living", time:"09:09", title:"09:09 • 21 ноября", sub:"Первый луч субботы",
+    text:"Утренний сигнал уникальной субботы 21 ноября, открывший серию из трёх знаков за день. Девятки мягко расчищают пространство для нового." },
+  { id:28, group:"living", time:"11:11", title:"11:11 • 21 ноября", sub:"Дневной портал",
+    text:"Второй луч одного дня: портал 11:11, пойманный ровно через два часа после утреннего 09:09. Свидетельство того, что ангелы ведут за руку весь день." },
+  { id:29, group:"living", time:"17:17", title:"17:17 • 21 ноября", sub:"Третий луч — награда",
+    text:"Завершающий аккорд тройного дня 21 ноября. Семнадцать и семнадцать — высшая ангельская похвала: «Ты всё делаешь правильно, продолжай»." },
+  { id:30, group:"living", time:"13:13", title:"13:13 • 24 ноября", sub:"Сила обновления",
+    text:"Тринадцать на циферблате — знак добрых перемен и поддержки наставников свыше. Кадр хранит момент смелого шага навстречу новой жизни." }
+];
+
+/* ------------------------- УТИЛИТЫ ------------------------- */
+const pad = n => (n < 10 ? "0" + n : "" + n);
+const chatScroll = document.getElementById("chatScroll");
+
+function scrollDown(){
+  requestAnimationFrame(()=>{ chatScroll.scrollTop = chatScroll.scrollHeight + 200; });
+}
+
+function toast(text){
+  const el = document.getElementById("toast");
+  el.textContent = text;
+  el.classList.add("on");
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.classList.remove("on"), 2100);
+}
+
+function flash(){
+  const el = document.getElementById("flash");
+  el.classList.add("on");
+  setTimeout(()=> el.classList.remove("on"), 160);
+}
+
+/* ------------------------- НУМЕРОЛОГИЯ ДНЯ ------------------------- */
+function dayVibration(date){
+  let sum = date.getDate() + (date.getMonth() + 1) + date.getFullYear();
+  while (sum > 9){
+    sum = String(sum).split("").reduce((a, b) => a + Number(b), 0);
+  }
+  return sum;
+}
+
+/* ------------------------- ПАРСЕР ВРЕМЕНИ ------------------------- */
+function extractTime(text){
+  const s = String(text);
+  const candidates = [];
+  let m;
+
+  const re1 = /(\d{1,2})\s*[:.\-–—]\s*(\d{1,2})/g;
+  while ((m = re1.exec(s)) !== null){
+    const h = Number(m[1]), mi = Number(m[2]);
+    if (h <= 23 && mi <= 59) candidates.push([h, mi]);
+  }
+
+  const re2 = /(?<!\d)(\d{2})\s+(\d{2})(?!\d)/g;
+  while ((m = re2.exec(s)) !== null){
+    const h = Number(m[1]), mi = Number(m[2]);
+    if (h <= 23 && mi <= 59) candidates.push([h, mi]);
+  }
+
+  const re3 = /(?<!\d)(\d{4})(?!\d)/g;
+  while ((m = re3.exec(s)) !== null){
+    const h = Number(m[1].slice(0, 2)), mi = Number(m[1].slice(2));
+    if (h <= 23 && mi <= 59) candidates.push([h, mi]);
+  }
+
+  if (!candidates.length) return null;
+
+  const paired = candidates.find(c => c[0] === c[1]);
+  const chosen = paired || candidates[0];
+  return { h: chosen[0], m: chosen[1], paired: !!paired };
+}
+
+/* ------------------------- АЛГОРИТМ УНИКАЛЬНОСТИ ------------------------- */
+/* Храним для каждого времени объект {angel:[], love:[], business:[], family:[]}
+   с уже использованными индексами. Когда все 3 исчерпаны — мягкий сброс,
+   сохраняющий последний использованный индекс (чтобы не повторить вчерашний). */
+function pickIndices(timeStr){
+  const key = "used_" + timeStr;
+  const data = store.get(key, {});
+  const result = {};
+  const fields = ["angel", "love", "business", "family"];
+
+  fields.forEach(field => {
+    let used = Array.isArray(data[field]) ? data[field].slice() : [];
+
+    if (used.length >= 3){
+      const last = used[used.length - 1];
+      used = [last]; // мягкий сброс: никогда не повторяем самый свежий вариант
+    }
+
+    const available = [0, 1, 2].filter(i => used.indexOf(i) === -1);
+    const idx = available[Math.floor(Math.random() * available.length)];
+    used.push(idx);
+    result[field] = idx;
+    data[field] = used;
+  });
+
+  store.set(key, data);
+  return result;
+}
+
+/* ------------------------- РЕНДЕР СООБЩЕНИЙ ------------------------- */
+function addUserMsg(text){
+  const wrap = document.createElement("div");
+  wrap.className = "msg user";
+  const b = document.createElement("div");
+  b.className = "bubble user";
+  b.textContent = text;
+  wrap.appendChild(b);
+  chatScroll.appendChild(wrap);
+  scrollDown();
+}
+
+function addBotMsg(html, extraClass){
+  const wrap = document.createElement("div");
+  wrap.className = "msg bot";
+  const b = document.createElement("div");
+  b.className = "bubble bot" + (extraClass ? " " + extraClass : "");
+  b.innerHTML = html;
+  wrap.appendChild(b);
+  chatScroll.appendChild(wrap);
+  scrollDown();
+}
+
+function addTyping(){
+  const wrap = document.createElement("div");
+  wrap.className = "msg bot";
+  wrap.id = "typingMsg";
+  wrap.innerHTML = '<div class="bubble bot"><span class="typing"><i></i><i></i><i></i></span></div>';
+  chatScroll.appendChild(wrap);
+  scrollDown();
+  return wrap;
+}
+
+function removeTyping(el){
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
+
+/* ------------------------- СЕКЦИЯ КАРТОЧКИ ------------------------- */
+function section(title, text, cls){
+  return '<div class="sect ' + (cls || "") + '"><h4>' + title + '</h4><p>' + text + '</p></div>';
+}
+
+/* ------------------------- ОСНОВНАЯ ЛОГИКА ОТВЕТА ------------------------- */
+const COOLDOWN_MS = 15 * 60 * 1000;
+
+const SOFT_ANSWER = "Ангельские знаки приходят только в тишине неожиданного взгляда. Не торопи время и не карауль стрелки — отвлекись на жизнь, и нужные цифры сами мягко постучатся в твой день.";
+
+function handleUserText(raw){
+  const text = String(raw || "").trim();
+  if (!text) return;
+
+  addUserMsg(text);
+
+  const typing = addTyping();
+
+  setTimeout(() => {
+    removeTyping(typing);
+
+    const parsed = extractTime(text);
+
+    if (!parsed){
+      addBotMsg('<p class="plain">Я слышу тебя. Но в этих словах пока нет времени — а мне нужны цифры. Напиши, например: «12:12» или «увидел 07.07».</p>');
+      return;
+    }
+
+    const timeStr = pad(parsed.h) + ":" + pad(parsed.m);
+
+    if (!CODES[timeStr]){
+      addBotMsg('<p class="plain">' + SOFT_ANSWER + '</p>');
+      return;
+    }
+
+    const now = Date.now();
+    const lastQuery = store.get("angel_last_query", 0);
+
+    if (lastQuery && (now - lastQuery) < COOLDOWN_MS){
+      addBotMsg('<p class="plain">' + SOFT_ANSWER + '</p>');
+      return;
+    }
+
+    store.set("angel_last_query", now);
+
+    /* --- генерация карточки --- */
+    const idx = pickIndices(timeStr);
+    const code = CODES[timeStr];
+    const today = new Date();
+    const vibration = dayVibration(today);
+    const month = today.getMonth() + 1;
+
+    const isDoublePortal = (parsed.h >= 1 && parsed.h <= 12 && parsed.h === today.getDate() && parsed.h === month && parsed.h === parsed.m);
+    const isSealTime = !!SEALS[timeStr];
+
+    if (isSealTime) flash();
+
+    let html = '<div class="card-head">'
+             + '<span class="time-pill">' + timeStr + '</span>'
+             + '<span class="vibe-pill">Вибрация дня · ' + vibration + '</span>'
+             + '</div>';
+
+    if (isDoublePortal){
+      html += '<div class="badge-double">✦ Двойной ангельский портал</div>';
+    }
+
+    html += section("Послание ангела", code.angel[idx.angel]);
+    html += section("Любовь", code.love[idx.love]);
+    html += section("Дело", code.business[idx.business]);
+    html += section("Семья", code.family[idx.family]);
+
+    if (isDoublePortal){
+      html += section("Сакральное послание года", DOUBLE_PORTAL_MESSAGES[month] || "", "portal-sect");
+    }
+
+    if (isSealTime){
+      html += '<div class="badge-seal">✦ Прикосновение к Высшему Порталу</div>';
+      html += section("Печать числа силы", SEALS[timeStr], "seal-sect");
+    }
+
+    addBotMsg(html, isDoublePortal ? "portal" : "");
+
+    /* --- запись в летопись и открытие артефактов --- */
+    recordCapture(timeStr);
+    const opened = openArtifactsFor(timeStr);
+
+    if (opened.length){
+      setTimeout(() => {
+        const names = opened.map(a => "«" + a.title + "»").join(" и ");
+        toast("Открыт артефакт: " + names);
+      }, 700);
+    }
+
+    /* --- сохраняем последнее послание для шеринга --- */
+    store.set("angel_last_answer",
+      "Код ангела · " + timeStr + "\n" +
+      code.angel[idx.angel] + "\n" +
+      code.love[idx.love] + "\n" +
+      code.business[idx.business] + "\n" +
+      code.family[idx.family] +
+      (isDoublePortal ? "\n✦ Двойной ангельский портал" : "") +
+      (isSealTime ? "\n✦ " + SEALS[timeStr] : "")
+    );
+
+  }, 420 + Math.random() * 300);
+}
+
+/* ------------------------- ЛЕТОПИСЬ ------------------------- */
+function recordCapture(timeStr){
+  const log = store.get("angel_log", []);
+  log.push({ t: timeStr, ts: Date.now() });
+  if (log.length > 400) log.splice(0, log.length - 400);
+  store.set("angel_log", log);
+}
+
+function openArtifactsFor(timeStr){
+  const opened = store.get("angel_opened", []);
+  const newly = [];
+
+  ARTIFACTS.forEach(a => {
+    if (a.time === timeStr && opened.indexOf(a.id) === -1){
+      opened.push(a.id);
+      newly.push(a);
+    }
+  });
+
+  if (newly.length) store.set("angel_opened", opened);
+  return newly;
+}
+
+/* ------------------------- ЧАТ: ФОРМА ------------------------- */
+document.getElementById("composer").addEventListener("submit", function(e){
+  e.preventDefault();
+  const input = document.getElementById("msgInput");
+  const val = input.value;
+  input.value = "";
+  input.blur();
+  handleUserText(val);
+});
+
+document.getElementById("quickRow").addEventListener("click", function(e){
+  const btn = e.target.closest(".chip");
+  if (!btn) return;
+  handleUserText(btn.dataset.q);
+});
+
+/* ------------------------- СБРОС ТАЙМЕРА (тест) ------------------------- */
+document.getElementById("resetTimer")?.addEventListener("click", function(){
+  store.set("angel_last_query", 0);
+  toast("Таймер сброшен · можно спросить снова");
+});
+
+/* ------------------------- НАВИГАЦИЯ ------------------------- */
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + btn.dataset.view).classList.add("active");
+
+    if (btn.dataset.view === "archive") renderArchive();
+    if (btn.dataset.view === "path") renderPath();
+    if (btn.dataset.view === "codes") renderCodes();
+  });
+});
+
+/* ------------------------- 24 КОДА ------------------------- */
+let codesRendered = false;
+function renderCodes(){
+  if (codesRendered) return;
+  codesRendered = true;
+
+  const wrap = document.getElementById("codesList");
+  const times = Object.keys(CODES);
+  let html = "";
+
+  times.forEach(t => {
+    html += '<div class="code-item" data-time="' + t + '">'
+          +   '<span class="num">' + t + '</span>'
+          +   '<span class="theme">' + CODES[t].theme + '</span>'
+          +   '<span class="arrow">›</span>'
+          + '</div>';
+  });
+
+  wrap.innerHTML = html;
+
+  wrap.addEventListener("click", e => {
+    const item = e.target.closest(".code-item");
+    if (!item) return;
+
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelector('.tab[data-view="chat"]').classList.add("active");
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-chat").classList.add("active");
+
+    handleUserText("Что значит " + item.dataset.time + "?");
+  });
+}
+
+/* ------------------------- АРХИВ ------------------------- */
+function artifactCardHTML(a, isOpen){
+  const sealClass = a.group === "seal" ? " seal" : "";
+  const openClass = isOpen ? " open" : " locked";
+
+  let thumb = '<div class="thumb">'
+            +   '<div class="ph">' + a.title + '</div>';
+
+  if (isOpen){
+    thumb += '<img src="artifacts/artifact_' + a.id + '.png" alt="' + a.title + '"'
+           + ' loading="lazy" onload="this.classList.add(\'loaded\')" onerror="this.remove()">';
+  } else {
+    thumb += '<div class="lock-ico">🔒</div>';
+  }
+  thumb += '</div>';
+
+  return '<div class="artifact' + sealClass + openClass + '" data-id="' + a.id + '">'
+       +   thumb
+       +   '<div class="cap">' + (isOpen ? a.title : "Не открыт")
+       +     '<small>' + (isOpen ? a.sub : "Поймай этот час") + '</small>'
+       +   '</div>'
+       + '</div>';
+}
+
+function renderArchive(){
+  const opened = store.get("angel_opened", []);
+
+  const seals = ARTIFACTS.filter(a => a.group === "seal");
+  const living = ARTIFACTS.filter(a => a.group === "living");
+
+  document.getElementById("sealsGrid").innerHTML =
+    seals.map(a => artifactCardHTML(a, opened.indexOf(a.id) !== -1)).join("");
+
+  document.getElementById("livingGrid").innerHTML =
+    living.map(a => artifactCardHTML(a, opened.indexOf(a.id) !== -1)).join("");
+
+  const count = opened.length;
+  document.getElementById("progressLabel").textContent = count + " из 30";
+  document.getElementById("progressFill").style.width = ((count / 30) * 100) + "%";
+
+  document.getElementById("artDetail").innerHTML = "";
+}
+
+document.addEventListener("click", e => {
+  const card = e.target.closest(".artifact.open");
+  if (!card) return;
+
+  const id = Number(card.dataset.id);
+  const a = ARTIFACTS.find(x => x.id === id);
+  if (!a) return;
+
+  const detail = document.getElementById("artDetail");
+  detail.innerHTML = '<div class="art-detail">'
+                   +   '<h5>' + (a.group === "seal" ? "Печать Высшего Портала" : "Живой Артефакт") + '</h5>'
+                   +   '<div style="font-size:15px;font-weight:700;color:#f3e0a8;margin-bottom:6px;">' + a.title + ' · ' + a.sub + '</div>'
+                   +   '<div>' + a.text + '</div>'
+                   + '</div>';
+  detail.scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+/* ------------------------- МОЙ ПУТЬ ------------------------- */
+function renderPath(){
+  const log = store.get("angel_log", []);
+  const opened = store.get("angel_opened", []);
+
+  document.getElementById("statTotal").textContent = log.length;
+  document.getElementById("statArt").textContent = opened.length + "/30";
+
+  const counts = {};
+  log.forEach(item => { counts[item.t] = (counts[item.t] || 0) + 1; });
+
+  let freq = "—";
+  let max = 0;
+  Object.keys(counts).forEach(k => {
+    if (counts[k] > max){ max = counts[k]; freq = k; }
+  });
+
+  document.getElementById("statFreq").textContent = freq;
+  document.getElementById("statUniq").textContent = Object.keys(counts).length;
+
+  /* статус */
+  const icon = document.getElementById("statusIcon");
+  const title = document.getElementById("statusTitle");
+  const desc = document.getElementById("statusDesc");
+
+  if (opened.length >= 30){
+    icon.textContent = "👑";
+    title.textContent = "Хранитель Порталов";
+    desc.textContent = "Все 30 артефактов открыты. Ты видишь знаки там, где другие видят случайность.";
+  } else if (opened.length >= 15){
+    icon.textContent = "✦";
+    title.textContent = "Хранитель Печатей";
+    desc.textContent = "Половина архива уже твоя. Врата узнают твой шаг.";
+  } else if (log.length >= 5){
+    icon.textContent = "🕯";
+    title.textContent = "Свидетель Знаков";
+    desc.textContent = "Ты научился замечать. Продолжай — архив ждёт.";
+  } else {
+    icon.textContent = "🕯";
+    title.textContent = "Ученик Знаков";
+    desc.textContent = "Первый шаг уже сделан. Продолжай замечать.";
+  }
+
+  /* летопись */
+  const list = document.getElementById("logList");
+  if (!log.length){
+    list.innerHTML = '<div class="empty">Здесь пока тихо.<br>Задай Оракулу вопрос — и первый знак появится в твоей летописи.</div>';
+  } else {
+    const recent = log.slice().reverse().slice(0, 25);
+    list.innerHTML = recent.map(item => {
+      const d = new Date(item.ts);
+      const dateStr = d.toLocaleDateString("ru-RU", { day: "2-digit", month: "short" }) + " · " +
+                      d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+      const isSeal = !!SEALS[item.t];
+      return '<div class="log-item">'
+           +   '<span class="t">' + item.t + '</span>'
+           +   '<span class="d">' + dateStr + '</span>'
+           +   (isSeal ? '<span class="b">Печать</span>' : '')
+           + '</div>';
+    }).join("");
+  }
+}
+
+/* ------------------------- ПОДЕЛИТЬСЯ ------------------------- */
+document.getElementById("shareBtn").addEventListener("click", async () => {
+  const text = store.get("angel_last_answer", "") ||
+               "Код ангела · мой личный оракул парного времени. Попробуй и ты услышать шёпот цифр.";
+
+  if (navigator.share){
+    try {
+      await navigator.share({ title: "Код ангела", text: text });
+      return;
+    } catch(e){ /* пользователь отменил */ }
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Послание скопировано");
+  } catch(e){
+    toast("Не удалось скопировать");
+  }
+});
+
+/* ------------------------- СТАРТ ------------------------- */
+(function init(){
+  /* приветствие */
+  const hour = new Date().getHours();
+  let greet = "Я здесь.";
+  if (hour >= 5 && hour < 12) greet = "Доброе утро.";
+  else if (hour >= 12 && hour < 18) greet = "Добрый день.";
+  else if (hour >= 18 && hour < 23) greet = "Добрый вечер.";
+  else greet = "Тихая ночь.";
+
+  addBotMsg(
+    '<p class="plain">' + greet + ' Напиши мне время, которое случайно попалось тебе на глаза — и я переведу его с языка ангелов.</p>'
+    + '<div class="sect"><h4>Как это работает</h4><p>Только парные часы — 00:00, 01:01, 02:02 … 23:23 — несут послание. Не карауль стрелки: знак приходит сам.</p></div>'
+  );
+
+  /* пре-рендер справочника */
+  renderCodes();
+  /* пре-рендер архива, чтобы прогресс был актуален */
+  renderArchive();
+})();
+</script>
+<script>
+(function(){
+  const audio = document.getElementById('bgMusic');
+  const btn = document.getElementById('musicBtn');
+  if(!audio || !btn) return;
+  audio.volume = 0.07;
+  let isPlaying = false;
+  function toggleMusic(forcePlay){
+    if(forcePlay === true && isPlaying) return;
+    if(!isPlaying || forcePlay === true){
+      audio.play().then(()=>{ isPlaying = true; btn.textContent = '♪'; }).catch((e)=>{ alert('Не найден файл music.mp3 рядом с index.html'); });
+    } else {
+      audio.pause(); isPlaying = false; btn.textContent = '🔇';
+    }
+  }
+  btn.onclick = () => toggleMusic();
+  const startBtn = document.getElementById('obNext');
+  const unlockAudio = () => { toggleMusic(true); document.removeEventListener('pointerdown', unlockAudio); document.removeEventListener('keydown', unlockAudio); }; document.addEventListener('pointerdown', unlockAudio); document.addEventListener('keydown', unlockAudio);
+})();
+</script>
+</body></html>
