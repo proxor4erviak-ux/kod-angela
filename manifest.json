@@ -1,19 +1,28 @@
-json
 {
-  "name": "Код ангела",
-  "short_name": "Код ангела",
-  "description": "Светлый чат-оракул парного времени и ангельских знаков на циферблате",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#060a20",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Код ангела",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "Код ангела",
+  "start_url": "https://github.io",
   "theme_color": "#060a20",
   "icons": [
     {
-      "src": "icon-512.png",
-      "sizes": "512x512",
+      "src": "https://proxor4erviak-ux.github.io/kod-angela/icon-512.png",
       "type": "image/png",
-      "purpose": "any maskable"
+      "sizes": "512x512",
+      "isSquare": true,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 512,
+      "is512x512": true,
+      "is256x256": false,
+      "is192x192": false
     }
-  ]
+  ],
+  "id": "kod-angela",
+  "description": "Чат-оракул парного времени и ангельских знаков на циферблате"
 }
